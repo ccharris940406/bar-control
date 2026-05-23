@@ -24,6 +24,7 @@ type Product = {
   warehouse_stock: number;
   min_stock: number;
   unit: string;
+  units_per_box: number;
   requires_inventory: boolean;
 };
 

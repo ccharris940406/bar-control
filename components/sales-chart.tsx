@@ -117,8 +117,8 @@ export default function SalesChart({ dailyData, weeklyData, monthlyData }: Props
               />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `$${value.toFixed(2)}`,
+                formatter={(value, name) => [
+                  `$${Number(value).toFixed(2)}`,
                   name === "ventas" ? "Ventas" : "Gastos",
                 ]}
               />
