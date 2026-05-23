@@ -53,9 +53,9 @@ export default async function Home() {
     .eq("active", true)
     .neq("requires_inventory", false);
 
-  // Productos con stock bajo en el enfriador (display_stock <= 5)
+  // Productos con stock bajo en el enfriador (display_stock <= min_stock)
   const lowDisplayStock = inventoryProducts?.filter(
-    (p) => p.display_stock <= 5 && p.display_stock >= 0
+    (p) => p.display_stock <= p.min_stock
   ) || [];
 
   // Productos que necesitan comprarse (warehouse_stock = 0 y display_stock <= min_stock)
