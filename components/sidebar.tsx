@@ -1,20 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 const links = [
   { href: "/", label: "Dashboard" },
   { href: "/cash-register", label: "Caja" },
   { href: "/sales", label: "Ventas" },
   { href: "/products", label: "Productos" },
+  { href: "/purchases", label: "Compras" },
   { href: "/inventory", label: "Inventario" },
   { href: "/expenses", label: "Gastos" },
-  { href: "/reportes", label: "Reportes" },
+  { href: "/reports", label: "Reportes" },
+  { href: "/analytics", label: "Analytics" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside className="w-56 min-h-screen bg-slate-900 text-white flex flex-col p-4 gap-1">
@@ -32,6 +43,15 @@ export default function Sidebar() {
           {link.label}
         </Link>
       ))}
+
+      <div className="mt-auto pt-4 border-t border-slate-700">
+        <button
+          onClick={handleLogout}
+          className="w-full text-left px-3 py-2 rounded-md text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+        >
+          🚪 Cerrar sesión
+        </button>
+      </div>
     </aside>
   );
 }

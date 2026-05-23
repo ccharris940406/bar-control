@@ -21,17 +21,28 @@ const categoryLabel: Record<string, string> = {
 export default async function ExpensesPage() {
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: register } = await supabase
+  // Caja abierta para mostrar botón de nuevo gasto
+  const { data: openRegister } = await supabase
     .from("cash_registers")
     .select("*")
     .eq("date", today)
+    .eq("status", "open")
     .single();
+
+  // Todas las cajas del día
+  const { data: allRegisters } = await supabase
+    .from("cash_registers")
+    .select("id")
+    .eq("date", today);
+
+  const registerIds = allRegisters?.map((r) => r.id) || [];
 
   const { data: expenses } = await supabase
     .from("expenses")
     .select("*")
-    .eq("cash_register_id", register?.id || "")
+    .in("cash_register_id", registerIds.length > 0 ? registerIds : [""])
     .order("created_at", { ascending: false });
+
   const totalExpenses =
     expenses?.reduce((sum, e) => sum + parseFloat(e.amount), 0) || 0;
 
@@ -39,12 +50,12 @@ export default async function ExpensesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Gastos</h1>
-        {register && register.status === "open" && (
-          <NewExpenseDialog register={register} />
+        {openRegister && (
+          <NewExpenseDialog register={openRegister} />
         )}
       </div>
 
-      {!register ? (
+      {!allRegisters || allRegisters.length === 0 ? (
         <p className="text-slate-500">Abre la caja para registrar gastos.</p>
       ) : (
         <>

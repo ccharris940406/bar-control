@@ -23,10 +23,11 @@ import {
 } from "@/components/ui/dialog";
 
 type Supplier = { id: string; name: string };
-type Product = { id: string; name: string };
+type Product = { id: string; name: string; units_per_box: number };
 type CartItem = Product & {
   quantity: number;
   price_per_box: number;
+  units_per_box: number;
   subtotal: number;
 };
 
@@ -43,6 +44,7 @@ export default function NewPurchaseDialog() {
     product_id: "",
     quantity: "",
     price_per_box: "",
+    units_per_box: "1",
   });
   const router = useRouter();
 
@@ -52,8 +54,9 @@ export default function NewPurchaseDialog() {
       supabase.from("suppliers").select("id, name").order("name"),
       supabase
         .from("products")
-        .select("id, name")
+        .select("id, name, units_per_box")
         .eq("active", true)
+        .neq("requires_inventory", false)
         .order("name"),
     ]);
     setSuppliers(suppliersRes.data || []);
@@ -69,6 +72,7 @@ export default function NewPurchaseDialog() {
 
     const quantity = parseInt(form.quantity);
     const pricePerBox = parseFloat(form.price_per_box);
+    const unitsPerBox = parseInt(form.units_per_box) || 1;
     const subtotal = quantity * pricePerBox;
 
     const existingItem = cart.find((item) => item.id === form.product_id);
@@ -87,11 +91,11 @@ export default function NewPurchaseDialog() {
     } else {
       setCart([
         ...cart,
-        { ...product, quantity, price_per_box: pricePerBox, subtotal },
+        { ...product, quantity, price_per_box: pricePerBox, units_per_box: unitsPerBox, subtotal },
       ]);
     }
 
-    setForm({ product_id: "", quantity: "", price_per_box: "" });
+    setForm({ product_id: "", quantity: "", price_per_box: "", units_per_box: "1" });
   }
 
   function removeFromCart(productId: string) {
@@ -123,6 +127,7 @@ export default function NewPurchaseDialog() {
         product_id: item.id,
         quantity: item.quantity,
         price_per_box: item.price_per_box,
+        units_per_box: item.units_per_box,
         subtotal: item.subtotal,
       }));
 
@@ -138,11 +143,12 @@ export default function NewPurchaseDialog() {
             .eq("id", item.id)
             .single();
 
+          const totalUnits = item.quantity * item.units_per_box;
           await supabase
             .from("products")
             .update({
               warehouse_stock:
-                (currentProduct.data?.warehouse_stock || 0) + item.quantity,
+                (currentProduct.data?.warehouse_stock || 0) + totalUnits,
               cost: item.price_per_box,
             })
             .eq("id", item.id);
@@ -155,7 +161,7 @@ export default function NewPurchaseDialog() {
       setOpen(false);
       setSelectedSupplier("");
       setCart([]);
-      setForm({ product_id: "", quantity: "", price_per_box: "" });
+      setForm({ product_id: "", quantity: "", price_per_box: "", units_per_box: "1" });
       router.refresh();
     }
   }
@@ -206,7 +212,14 @@ export default function NewPurchaseDialog() {
             <Label className="mb-1 block">Producto</Label>
             <Select
               value={form.product_id}
-              onValueChange={(v) => setForm({ ...form, product_id: v })}
+              onValueChange={(v) => {
+                const product = products.find((p) => p.id === v);
+                setForm({
+                  ...form,
+                  product_id: v,
+                  units_per_box: product?.units_per_box.toString() || "1",
+                });
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona producto" />
@@ -221,38 +234,51 @@ export default function NewPurchaseDialog() {
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <div>
-              <Label className="mb-1 block text-sm">Cantidad</Label>
-              <Input
-                type="number"
-                min="1"
-                value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                className="text-sm"
-              />
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className="mb-1 block text-sm">Cantidad</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.quantity}
+                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                  className="text-sm"
+                />
+              </div>
+              <div>
+                <Label className="mb-1 block text-sm">Por presentación</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={form.units_per_box}
+                  onChange={(e) =>
+                    setForm({ ...form, units_per_box: e.target.value })
+                  }
+                  className="text-sm"
+                  placeholder="24"
+                />
+              </div>
+              <div>
+                <Label className="mb-1 block text-sm">Precio</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={form.price_per_box}
+                  onChange={(e) =>
+                    setForm({ ...form, price_per_box: e.target.value })
+                  }
+                  className="text-sm"
+                />
+              </div>
             </div>
-            <div>
-              <Label className="mb-1 block text-sm">Precio/caja</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.price_per_box}
-                onChange={(e) =>
-                  setForm({ ...form, price_per_box: e.target.value })
-                }
-                className="text-sm"
-              />
-            </div>
-            <div className="col-span-2 md:col-span-1 flex items-end">
-              <Button
-                type="button"
-                onClick={addToCart}
-                className="w-full text-sm"
-              >
-                Agregar
-              </Button>
-            </div>
+            <Button
+              type="button"
+              onClick={addToCart}
+              className="w-full text-sm"
+            >
+              Agregar
+            </Button>
           </div>
 
           {cart.length > 0 && (
@@ -266,8 +292,10 @@ export default function NewPurchaseDialog() {
                   <div>
                     <p className="text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-slate-500">
-                      {item.quantity} x ${item.price_per_box.toFixed(2)} = $
-                      {item.subtotal.toFixed(2)}
+                      {item.quantity} × {item.units_per_box} unidades @ ${item.price_per_box.toFixed(2)} = ${item.subtotal.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Total: {item.quantity * item.units_per_box} unidades
                     </p>
                   </div>
                   <Button

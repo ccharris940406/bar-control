@@ -26,15 +26,32 @@ export default function OpenCashRegisterDialog() {
 
     const today = new Date().toISOString().split("T")[0];
 
+    // Buscar si existe caja ABIERTA para hoy
+    const { data: openRegister } = await supabase
+      .from("cash_registers")
+      .select("id")
+      .eq("date", today)
+      .eq("status", "open")
+      .single();
+
+    if (openRegister) {
+      alert("Ya hay una caja abierta hoy");
+      setLoading(false);
+      return;
+    }
+
+    // Crear nueva caja (caja nueva, saldo inicial 0 o el que ingrese)
     const { error } = await supabase.from("cash_registers").insert({
       date: today,
       opening_balance: parseFloat(balance),
       status: "open",
+      opened_at: new Date().toISOString(),
     });
 
     setLoading(false);
     if (!error) {
       setOpen(false);
+      setBalance("");
       router.refresh();
     }
   }

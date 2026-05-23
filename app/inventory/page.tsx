@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import TransferStockDialog from "@/components/transfer-stock-dialog";
 
 export default async function InventoryPage() {
-  const { data: products } = await supabase
+  const { data: allProducts } = await supabase
     .from("products")
     .select("*, categories(name)")
     .eq("active", true)
     .order("name");
 
+  const products = allProducts?.filter((p) => p.requires_inventory !== false) || [];
   const lowDisplayStock = products?.filter((p) => p.display_stock <= 5) || [];
 
   return (

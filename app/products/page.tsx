@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import ProductForm from "@/components/product-form";
 import NewProductDialog from "@/components/new-product-dialog";
+import EditProductDialog from "@/components/edit-product-dialog";
 
 const typeLabel: Record<string, string> = {
   drink: "Bebida",
@@ -41,7 +42,10 @@ export default async function ProductsPage() {
           {products.map((p) => (
             <Card key={p.id}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{p.name}</CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base">{p.name}</CardTitle>
+                  <EditProductDialog product={p} categories={categories ?? []} />
+                </div>
                 {p.categories && (
                   <Badge variant="secondary">
                     {typeLabel[p.categories.type]} — {p.categories.name}

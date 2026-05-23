@@ -5,28 +5,28 @@ import { Badge } from "@/components/ui/badge";
 export default async function ReportsPage() {
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: register } = await supabase
+  // Obtener TODAS las cajas del día
+  const { data: allRegisters } = await supabase
     .from("cash_registers")
-    .select("*")
-    .eq("date", today)
-    .single();
+    .select("id")
+    .eq("date", today);
 
-  const registerId = register?.id;
+  const registerIds = allRegisters?.map((r) => r.id) || [];
 
   const [{ data: sales }, { data: expenses }, { data: saleItems }] =
     await Promise.all([
       supabase
         .from("sales")
         .select("total")
-        .eq("cash_register_id", registerId || ""),
+        .in("cash_register_id", registerIds.length > 0 ? registerIds : [""]),
       supabase
         .from("expenses")
         .select("amount")
-        .eq("cash_register_id", registerId || ""),
+        .in("cash_register_id", registerIds.length > 0 ? registerIds : [""]),
       supabase
         .from("sale_items")
-        .select("*, sales(id), products(name, cost, units_per_box)")
-        .eq("sales.cash_register_id", registerId || ""),
+        .select("*, sales(id, cash_register_id), products(name, cost, units_per_box)")
+        .in("sales.cash_register_id", registerIds.length > 0 ? registerIds : [""]),
     ]);
 
   const totalSales =
@@ -67,7 +67,7 @@ export default async function ReportsPage() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Reportes - {today}</h1>
 
-      {!register ? (
+      {!allRegisters || allRegisters.length === 0 ? (
         <p className="text-slate-500">Abre la caja para ver reportes.</p>
       ) : (
         <>
