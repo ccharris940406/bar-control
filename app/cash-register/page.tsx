@@ -2,10 +2,11 @@ import OpenCashRegisterDialog from "@/components/open-cash-register-dialog";
 import CloseCashRegisterDialog from "@/components/close-cash-register-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTodayMexico } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 
 export default async function CajaPage() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayMexico();
 
   const { data: register } = await supabase
     .from("cash_registers")

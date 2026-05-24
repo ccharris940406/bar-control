@@ -1,5 +1,6 @@
 import SalesChart from "@/components/sales-chart";
 import { supabase } from "@/lib/supabase";
+import { getTodayMexico } from "@/lib/date";
 
 function groupByDay(items: any[], field: string) {
   const map: Record<string, number> = {};
@@ -25,12 +26,12 @@ function mergeKeys(...maps: Record<string, number>[]) {
 }
 
 export default async function AnalyticsPage() {
-  const today = new Date();
-  const lastDay = today.toISOString().split("T")[0];
+  // Usar fecha de México como base para todos los rangos
+  const lastDay = getTodayMexico();
+  const today = new Date(lastDay + "T12:00:00"); // mediodía para evitar problemas de DST
 
   // Mes actual
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    .toISOString().split("T")[0];
+  const firstDayOfMonth = `${lastDay.substring(0, 7)}-01`;
 
   // Semana actual (lunes a hoy)
   const dayOfWeek = today.getDay();
@@ -40,8 +41,7 @@ export default async function AnalyticsPage() {
   const firstDayOfWeek = monday.toISOString().split("T")[0];
 
   // Este año
-  const firstDayOfYear = new Date(today.getFullYear(), 0, 1)
-    .toISOString().split("T")[0];
+  const firstDayOfYear = `${lastDay.substring(0, 4)}-01-01`;
 
   // IDs de cajas del año para filtrar gastos
   const { data: registers } = await supabase

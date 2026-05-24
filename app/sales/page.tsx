@@ -2,10 +2,11 @@ import CreateSaleDialog from "@/components/create-sale-dialog";
 import PrintTicketButton from "@/components/print-ticket-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTodayMexico } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 
 export default async function SalesPage() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayMexico();
 
   // Buscar si hay caja abierta para mostrar botón
   const { data: openRegister } = await supabase

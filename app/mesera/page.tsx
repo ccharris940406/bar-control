@@ -1,8 +1,9 @@
+import { getTodayMexico } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 import MeseraInterface from "@/components/mesera-interface";
 
 export default async function MeseraPage() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayMexico();
 
   const { data: openRegister } = await supabase
     .from("cash_registers")

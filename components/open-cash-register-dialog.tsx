@@ -1,6 +1,7 @@
 'use client'
 
 import { supabase } from "@/lib/supabase";
+import { getTodayMexico } from "@/lib/date";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import {
@@ -24,7 +25,7 @@ export default function OpenCashRegisterDialog() {
     e.preventDefault();
     setLoading(true);
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getTodayMexico();
 
     // Buscar si existe caja ABIERTA para hoy
     const { data: openRegister } = await supabase

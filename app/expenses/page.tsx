@@ -1,3 +1,4 @@
+import { getTodayMexico } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NewExpenseDialog from "@/components/new-expense-dialog";
@@ -19,7 +20,7 @@ const categoryLabel: Record<string, string> = {
 };
 
 export default async function ExpensesPage() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayMexico();
 
   // Caja abierta para mostrar botón de nuevo gasto
   const { data: openRegister } = await supabase

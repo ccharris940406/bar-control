@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getTodayMexico } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
 export default async function Home() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayMexico();
 
   // Caja abierta hoy
   const { data: openRegister } = await supabase

@@ -1,9 +1,10 @@
+import { getTodayMexico } from "@/lib/date";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function ReportsPage() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayMexico();
 
   // Obtener TODAS las cajas del día
   const { data: allRegisters } = await supabase
